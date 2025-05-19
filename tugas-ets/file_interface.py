@@ -4,7 +4,9 @@ from glob import glob
 
 class FileInterface:
     def __init__(self):
-        os.chdir('files/')
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        files_dir = os.path.join(base_path, 'files')
+        os.chdir(files_dir)
 
     def list(self, params=[]):
         try:
