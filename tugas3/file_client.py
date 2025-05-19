@@ -84,19 +84,20 @@ def remote_delete(filename=""):
         print("Gagal")
         return False
 
+def show_menu():
+    print("\nOptions:")
+    print("1. List files")
+    print("2. Get file")
+    print("3. Upload file")
+    print("4. Delete file")
+    print("5. Exit")
+
 if __name__ == '__main__':
     server_address = ('127.0.0.1', 3000)
 
     while True:
-        print("\nOptions:")
-        print("1. List files")
-        print("2. Get file")
-        print("3. Upload file")
-        print("4. Delete file")
-        print("5. Exit")
-
+        show_menu()
         choice = input("Enter your choice: ")
-
         if choice == '1':
             remote_list()
         elif choice == '2':
