@@ -12,7 +12,7 @@ def process_client(connection, address):
     try:
         connection.settimeout(1800)  # 30 minutes timeout
         while True:
-            data = connection.recv(131072)  # Increased from 32 to 8192 bytes
+            data = connection.recv(131072)  # Increased from 32 to 131072 bytes
             if not data:
                 break
             buffer += data.decode()
