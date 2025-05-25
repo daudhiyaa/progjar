@@ -1,7 +1,6 @@
 import socket
-import threading
 import logging
-import time
+import argparse
 from concurrent.futures import ThreadPoolExecutor
 from file_protocol import FileProtocol
 
@@ -23,18 +22,18 @@ def process_client(connection, address):
     finally:
         connection.close()
 
-class Server(threading.Thread):
-    def __init__(self, ipaddress, port, max_workers=10):
-        threading.Thread.__init__(self)
+class Server:
+    def __init__(self, ipaddress='0.0.0.0', port=6667, max_workers=10):
         self.ipinfo = (ipaddress, port)
         self.my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.my_socket.settimeout(1800)  # 5 minutes timeout
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
 
-    def run(self):
-        logging.warning(f"server berjalan di ip address {self.ipinfo}")
+    def start(self):
+        logging.warning(f"server running on ip address {self.ipinfo} with process pool size {self.executor._max_workers}")
         self.my_socket.bind(self.ipinfo)
-        self.my_socket.listen(1)
+        self.my_socket.listen(5)
 
         try:
             while True:
@@ -56,11 +55,10 @@ class Server(threading.Thread):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.WARNING)
-    server = Server(ipaddress='127.0.0.1', port=3000)
+    parser = argparse.ArgumentParser(description='Multithreaded Server')
+    parser.add_argument('--port', type=int, default=6667, help='Server port (default: 6667)')
+    parser.add_argument('--pool-size', type=int, default=10, help='Thread pool size (default: 10)')
+    args = parser.parse_args()
+
+    server = Server(ipaddress='0.0.0.0', port=args.port, max_workers=args.pool_size)
     server.start()
-    
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        logging.warning("KeyboardInterrupt received, shutting down server...")

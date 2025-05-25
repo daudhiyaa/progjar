@@ -93,7 +93,8 @@ def show_menu():
     print("5. Exit")
 
 if __name__ == '__main__':
-    server_address = ('127.0.0.1', 3000)
+    server_address = ('127.0.0.1', 6667)
+    logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')
 
     while True:
         show_menu()

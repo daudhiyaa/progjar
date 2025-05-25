@@ -1,6 +1,7 @@
 import socket
 import logging
-import os
+import argparse
+import multiprocessing
 from concurrent.futures import ProcessPoolExecutor
 from file_protocol import FileProtocol
 
@@ -10,18 +11,17 @@ def process_client(ip_port_bytes):
     result = fp.proses_string(data.decode())
     return (ip, port, result)
 
-class Server():
-    def __init__(self, ipaddress, port, max_workers=10):
+class Server:
+    def __init__(self, ipaddress='0.0.0.0', port=6667, max_workers=10):
         self.ipinfo = (ipaddress, port)
         self.my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.executor = ProcessPoolExecutor(max_workers=max_workers)
 
     def start(self):
-        logging.warning(f"server berjalan di ip address {self.ipinfo}")
-        logging.warning(f"using {self.executor._max_workers} worker processes")
+        logging.warning(f"server running on ip address {self.ipinfo} with process pool size {self.executor._max_workers}")
         self.my_socket.bind(self.ipinfo)
-        self.my_socket.listen(5)  # Increased backlog for more pending connections
+        self.my_socket.listen(5) # Increased backlog for more pending connections
 
         try:
             while True:
@@ -50,6 +50,12 @@ class Server():
         logging.warning("Server has been shut down.")
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
     logging.basicConfig(level=logging.WARNING)
-    server = Server(ipaddress='127.0.0.1', port=3000)
+    parser = argparse.ArgumentParser(description='Multiprocess Server')
+    parser.add_argument('--port', type=int, default=6667, help='Server port (default: 6667)')
+    parser.add_argument('--pool-size', type=int, default=10, help='Thread pool size (default: 10)')
+    args = parser.parse_args()
+
+    server = Server(ipaddress='0.0.0.0', port=args.port, max_workers=args.pool_size)
     server.start()
