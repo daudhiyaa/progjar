@@ -40,10 +40,10 @@ GET
   - data: pesan kesalahan
 
 UPLOAD
-* TUJUAN: untuk mengupload file (converted to base64 string) dengan menyebutkan nama file dalam parameter
+* TUJUAN: untuk mengupload file (converted to base64 string) dengan menyebutkan path file dalam parameter
 * PARAMETER:
   - PARAMETER1 : string base64 dari file yang akan diunggah
-  - PARAMETER2 : nama file yang akan diunggah
+  - PARAMETER2 : path file yang akan diunggah
 * RESULT:
 - BERHASIL:
   - status: OK
