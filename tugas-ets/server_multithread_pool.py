@@ -7,18 +7,21 @@ from file_protocol import FileProtocol
 fp = FileProtocol()
 
 def process_client(connection, address):
+    buffer = ""
     try:
+        connection.settimeout(1800)  # 30 minutes timeout
         while True:
-            data_received = connection.recv(52428800)
-            if data_received:
-                data = data_received.decode()
-                result = fp.proses_string(data)
-                result += "\r\n\r\n"
-                connection.sendall(result.encode())
-            else:
+            data = connection.recv(131072)  # Increased from 32 to 8192 bytes
+            if not data:
                 break
+            buffer += data.decode()
+            while "\r\n\r\n" in buffer:
+                command, buffer = buffer.split("\r\n\r\n", 1)
+                result = fp.proses_string(command)
+                response = result + "\r\n\r\n"
+                connection.sendall(response.encode())
     except Exception as e:
-        logging.warning(f"error: {e}")
+        logging.warning(f"Error: {str(e)}")
     finally:
         connection.close()
 
@@ -27,7 +30,7 @@ class Server:
         self.ipinfo = (ipaddress, port)
         self.my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.my_socket.settimeout(1800)  # 5 minutes timeout
+        self.my_socket.settimeout(1800)  # 30 minutes timeout
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
 
     def start(self):

@@ -5,17 +5,33 @@ import multiprocessing
 from concurrent.futures import ProcessPoolExecutor
 from file_protocol import FileProtocol
 
-def process_client(ip_port_bytes):
-    ip, port, data = ip_port_bytes
-    fp = FileProtocol()
-    result = fp.proses_string(data.decode())
-    return (ip, port, result)
+fp = FileProtocol()
+
+def process_client(connection, address):
+    buffer = ""
+    try:
+        connection.settimeout(1800)  # 30 minutes timeout
+        while True:
+            data = connection.recv(131072)  # Increased from 32 to 8192 bytes
+            if not data:
+                break
+            buffer += data.decode()
+            while "\r\n\r\n" in buffer:
+                command, buffer = buffer.split("\r\n\r\n", 1)
+                result = fp.proses_string(command)
+                response = result + "\r\n\r\n"
+                connection.sendall(response.encode())
+    except Exception as e:
+        logging.warning(f"Error: {str(e)}")
+    finally:
+        connection.close()
 
 class Server:
     def __init__(self, ipaddress='0.0.0.0', port=6667, max_workers=10):
         self.ipinfo = (ipaddress, port)
         self.my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.my_socket.settimeout(1800)  # 30 minutes timeout
         self.executor = ProcessPoolExecutor(max_workers=max_workers)
 
     def start(self):
@@ -26,16 +42,8 @@ class Server:
         try:
             while True:
                 connection, client_address = self.my_socket.accept()
-                ip, port = client_address
                 logging.warning(f"connection from {client_address}")
-
-                data = connection.recv(52428800)
-                future = self.executor.submit(process_client, (ip, port, data))
-                result = future.result()
-
-                response = result[2] + "\r\n\r\n"
-                connection.sendall(response.encode())
-                connection.close()
+                self.executor.submit(process_client, connection, client_address)
         except KeyboardInterrupt:
             logging.warning("KeyboardInterrupt received, shutting down server...")
         finally:
