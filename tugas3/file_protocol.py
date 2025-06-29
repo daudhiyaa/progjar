@@ -14,7 +14,7 @@ class FileProtocol:
         try:
             c_request = c[0].strip().upper()
             logging.warning(f"memproses request: {c_request}")
-            params = [x for x in c[1:]]
+            params = list(c[1:])
             if hasattr(self.file, c_request.lower()):
                 cl = getattr(self.file, c_request.lower())(params)
                 return json.dumps(cl)
